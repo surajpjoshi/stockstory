@@ -1,0 +1,29 @@
+name: StockStory Market Scanner
+on:
+  workflow_dispatch:
+  schedule:
+    # UTC: roughly 09:15-16:15 IST on weekdays, every 15 minutes.
+    - cron: '45,0,15,30 3-10 * * 1-5'
+permissions:
+  contents: write
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run Upstox scanner
+        env:
+          UPSTOX_TOKEN: ${{ secrets.UPSTOX_TOKEN }}
+        run: python scripts/market_scanner.py
+      - name: Commit market data
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "📊 Update StockStory market data"
+          file_pattern: data/market.json
