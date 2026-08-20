@@ -1,4 +1,39 @@
 {
-  "updated": null,
-  "stocks": []
+  "updated": "2026-08-20T16:48:52.043083+00:00",
+  "stocks": [
+    {
+      "symbol": "JYOTICNC",
+      "instrument_key": "NSE_EQ|INE980O01024",
+      "company": "Jyoti CNC Automation",
+      "tags": [
+        "Trendline Breakout",
+        "Strong RS",
+        "Above EMA50"
+      ],
+      "thesis": "Price has broken the long-term descending trendline. Watch confirmation or retest rather than chasing.",
+      "entry": "920-950",
+      "stop": "880",
+      "target1": "1050",
+      "target2": "1150",
+      "level_watch": "950 breakout / 920 retest",
+      "chartink": "",
+      "research": "",
+      "rsi_system": true,
+      "price": 949.75,
+      "high": 965.85,
+      "low": 943.05,
+      "volume": 879075,
+      "average20Volume": null,
+      "relativeVolume": null,
+      "volumeShocker": false,
+      "ath": null,
+      "distanceFromATH": null,
+      "yearlyHigh": null,
+      "yearlyLow": null,
+      "distanceFrom52WHigh": null,
+      "nearATH": false,
+      "newATH": false,
+      "setupScore": 0
+    }
+  ]
 }
