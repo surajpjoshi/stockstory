@@ -1,44 +1,21 @@
-# StockStory — Trading Command Center
+# StockStory V2 — Upstox-ready Trading Command Center
 
-This is V1 of a personal trading dashboard designed for GitHub Pages.
+V2 adds a secure backend architecture for Upstox market data, volume shockers, 52-week highs/lows, ATH calculation, and a scheduled scanner.
 
-## Features in V1
+## Files
+- `index.html`, `styles.css`, `app.js` — frontend
+- `api/server.js` — Node/Express API
+- `api/upstox.js` — Upstox V3 API wrapper
+- `api/scanner.js` — volume / 52W / ATH calculations
+- `data/stocks.json` — master stock list
+- `.github/workflows/market-scan.yml` — scheduled scanner template
 
-- Favourite stocks
-- Trading thesis / why I'm watching
-- Setup and tags
-- Entry / stop / targets
-- Key level to watch
-- Chartink / research links
-- Add to RSI Trading System flag
-- Trading journal
-- Personal trading rules
-- Responsive dashboard
-- Browser localStorage for prototype data
+## Security
+Set `UPSTOX_ACCESS_TOKEN` as a server environment variable. Never put it in browser JavaScript or commit it to GitHub.
 
-## Deploy to GitHub Pages
+## Metrics
+- Volume shock = current volume / average 20 completed daily volumes
+- 52W distance = (52W high - current price) / 52W high × 100
+- ATH = maximum daily high in the historical candles returned by Upstox
 
-1. Create an empty repository named `stockstory`.
-2. Upload all files and folders from this project to the repository root.
-3. Go to **Settings → Pages**.
-4. Under **Build and deployment**, select **Deploy from a branch**.
-5. Select `main` and `/ (root)`.
-6. Save.
-7. Open the generated GitHub Pages URL.
-
-## Important
-
-V1 intentionally does NOT contain Upstox API credentials or Telegram bot credentials.
-
-The next phase should add a secure backend/API layer for:
-- Upstox live prices
-- WebSocket market feed
-- price/technical alerts
-- Telegram notifications
-- RS Trading System synchronization
-
-Do not put Upstox secrets or Telegram bot tokens in browser JavaScript or a public GitHub repository.
-
-## Data model direction
-
-The `data/stocks.json` file is the starting master-stock structure. Later, this can become the shared stock source for both StockStory and the RSI Trading System.
+The frontend remains GitHub Pages compatible. The backend should be deployed separately (Render, Railway, Cloud Run, etc.).
