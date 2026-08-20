@@ -1,0 +1,20 @@
+[
+  {
+    "symbol": "JYOTICNC",
+    "company": "Jyoti CNC Automation",
+    "instrument_key": "NSE_EQ|INE980O01024",
+    "favourite": true,
+    "tags": [
+      "Trendline Breakout",
+      "Strong RS",
+      "Above EMA50"
+    ],
+    "thesis": "Price has broken the long-term descending trendline. Watch confirmation or retest rather than chasing.",
+    "entry": "920-950",
+    "stop": "880",
+    "target1": "1050",
+    "target2": "1150",
+    "level_watch": "950 breakout / 920 retest",
+    "rsi_system": true
+  }
+]

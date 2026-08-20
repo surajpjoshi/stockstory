@@ -1,0 +1,26 @@
+name: StockStory V2 NSE Scanner
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 15 minutes during roughly NSE cash-market hours, weekdays.
+    # GitHub Actions uses UTC. 03:45 UTC = 09:15 IST.
+    - cron: '0,15,30,45 3-10 * * 1-5'
+permissions:
+  contents: write
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install -r requirements.txt
+      - name: Refresh NSE instruments
+        run: python scripts/update_instruments.py
+      - name: Scan NSE market
+        env: {UPSTOX_TOKEN: ${{ secrets.UPSTOX_TOKEN }}}
+        run: python scripts/market_scanner.py
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "📊 StockStory NSE scan"
+          file_pattern: "data/stocks.json data/market.json"
