@@ -1,0 +1,16 @@
+name: StockStory Market Scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 4 * * 1-5"
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: echo "Scanner template ready. Connect it to the secure backend before enabling Upstox calls."
