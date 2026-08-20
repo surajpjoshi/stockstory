@@ -1,7 +1,9 @@
 [
   {
     "symbol": "JYOTICNC",
+    "instrumentKey": "",
     "company": "Jyoti CNC Automation",
+    "favourite": true,
     "setup": "Long-term descending trendline breakout",
     "tags": ["Trendline Breakout", "Strong RS", "Above EMA50"],
     "whyWatching": "Price has broken the long-term descending trendline. Watch for confirmation or a controlled retest rather than chasing.",
@@ -12,6 +14,7 @@
     "levelToWatch": "950 breakout / 920 retest",
     "chartinkUrl": "",
     "researchUrl": "",
-    "imageUrl": ""
+    "imageUrl": "",
+    "rsiSystem": true
   }
 ]
