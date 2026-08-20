@@ -1,21 +1,30 @@
-# StockStory V2 — Upstox-ready Trading Command Center
+# StockStory — Start From Zero
 
-V2 adds a secure backend architecture for Upstox market data, volume shockers, 52-week highs/lows, ATH calculation, and a scheduled scanner.
+Architecture:
 
-## Files
-- `index.html`, `styles.css`, `app.js` — frontend
-- `api/server.js` — Node/Express API
-- `api/upstox.js` — Upstox V3 API wrapper
-- `api/scanner.js` — volume / 52W / ATH calculations
-- `data/stocks.json` — master stock list
-- `.github/workflows/market-scan.yml` — scheduled scanner template
+GitHub Actions → Python → Upstox → data/market.json → GitHub Pages
 
-## Security
-Set `UPSTOX_ACCESS_TOKEN` as a server environment variable. Never put it in browser JavaScript or commit it to GitHub.
+No Render is required for this version.
 
-## Metrics
-- Volume shock = current volume / average 20 completed daily volumes
-- 52W distance = (52W high - current price) / 52W high × 100
-- ATH = maximum daily high in the historical candles returned by Upstox
+## One-time setup
 
-The frontend remains GitHub Pages compatible. The backend should be deployed separately (Render, Railway, Cloud Run, etc.).
+1. Upload the entire contents of this folder to your empty `stockstory` repo.
+2. GitHub repo → Settings → Secrets and variables → Actions.
+3. Add repository secret:
+   - Name: `UPSTOX_TOKEN`
+   - Value: your Upstox Analytics Token.
+4. Go to Actions → StockStory Market Scanner → Run workflow.
+5. After it succeeds, open the GitHub Pages website.
+
+## Add stocks
+
+Edit `data/stocks.json`. Each stock needs an Upstox instrument key.
+
+Example:
+`NSE_EQ|INE980O01024`
+
+## GitHub Pages
+
+Settings → Pages → Deploy from branch → `master` (or `main`) → `/ (root)`.
+
+The scanner is intentionally small in V1. Next phases can add full NSE universe, RS integration, news, trendline detection, alerts and Telegram.
