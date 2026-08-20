@@ -1,8 +1,102 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>StockStory V2</title><link rel="stylesheet" href="styles.css"></head>
-<body><header><div><b>Stock<span>Story</span></b><small> NSE Trading Command Center</small></div><button onclick="load()">↻ Refresh</button></header>
-<main><section class="hero"><div><small>NSE MARKET INTELLIGENCE</small><h1>Find the setup.<br>Trade the story.</h1><p>Upstox market data → Python scanner → GitHub Pages.</p></div><div class="stats"><div><strong id="count">0</strong><small>NSE Stocks</small></div><div><strong id="updated">—</strong><small>Last Scan</small></div></div></section>
-<nav><button class="active" data-page="watch">Watchlist</button><button data-page="scanner">Scanner</button><button data-page="journal">Journal</button><button data-page="rules">Rules</button></nav>
-<section id="watch" class="page active"><div class="head"><div><h2>Favourite Stocks</h2><p>Stocks you have selected for deeper tracking.</p></div></div><div id="fav" class="grid"></div></section>
-<section id="scanner" class="page"><div class="head"><div><h2>NSE Scanner</h2><p>Sorted by setup score and current market signals.</p></div></div><div id="scan" class="grid"></div></section>
-<section id="journal" class="page"><div class="head"><div><h2>Trading Journal</h2></div><button onclick="addTrade()">+ Trade</button></div><div id="journalList"></div></section>
-<section id="rules" class="page"><h2>My Trading Rules</h2><div class="rules"><label><input type="checkbox"> Weekly RSI preferably above 50</label><label><input type="checkbox"> RS strength for 5+ days</label><label><input type="checkbox"> Volume confirmation</label><label><input type="checkbox"> Define entry, stop and target</label><label><input type="checkbox"> Prefer minimum 1:2 risk/reward</label><label><input type="checkbox"> Check sector and market strength</label><label><input type="checkbox"> Record the reason for every trade</label></div></section></main><footer>StockStory V2 · GitHub Actions + Python + Upstox</footer><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StockStory — Trading Journal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <div class="brand">StockStory</div>
+    <div class="subtitle">My trading journal & watchlist</div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="importBtn">Import CSV</button>
+    <button class="btn primary" id="addBtn">+ Add Stock</button>
+    <input type="file" id="csvInput" accept=".csv" hidden>
+  </div>
+</header>
+
+<main class="container">
+  <section class="stats">
+    <div class="stat"><span>⭐ Favourites</span><strong id="favCount">0</strong></div>
+    <div class="stat"><span>👀 Watchlist</span><strong id="stockCount">0</strong></div>
+    <div class="stat"><span>📔 Journal Entries</span><strong id="journalCount">0</strong></div>
+  </section>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="watchlist">Watchlist</button>
+    <button class="tab" data-tab="journal">Journal</button>
+  </nav>
+
+  <section id="dashboard" class="tabpage active">
+    <div class="section-head"><div><h2>Today's View</h2><p>Your current trading thoughts.</p></div><button class="btn primary" id="journalTodayBtn">+ Today's Journal</button></div>
+    <div class="grid two">
+      <article class="card"><h3>📔 Latest Journal</h3><div id="latestJournal" class="empty">No journal entry yet.</div></article>
+      <article class="card"><h3>🎯 Levels to Watch</h3><div id="levels" class="stock-list"></div></article>
+    </div>
+    <div class="section-head"><div><h2>⭐ Favourite Stocks</h2></div><button class="btn" id="favTabBtn">View all</button></div>
+    <div id="favourites" class="cards"></div>
+  </section>
+
+  <section id="watchlist" class="tabpage">
+    <div class="section-head">
+      <div><h2>Watchlist</h2><p>Add stocks manually or import a CSV.</p></div>
+      <div class="actions"><button class="btn" id="exportBtn">Export CSV</button><button class="btn primary" id="addBtn2">+ Add Stock</button></div>
+    </div>
+    <div class="filters"><input id="search" placeholder="Search symbol, company, setup..."><select id="favFilter"><option value="all">All stocks</option><option value="fav">Favourites</option></select></div>
+    <div id="watchlistTable" class="tablewrap"></div>
+  </section>
+
+  <section id="journal" class="tabpage">
+    <div class="section-head"><div><h2>Trading Journal</h2><p>Record what you saw, did and learned.</p></div><button class="btn primary" id="journalBtn">+ New Entry</button></div>
+    <div id="journalList" class="journal-list"></div>
+  </section>
+</main>
+
+<div id="modal" class="modal hidden">
+  <div class="modalbox">
+    <div class="modalhead"><h2 id="modalTitle">Add Stock</h2><button class="close" id="closeModal">×</button></div>
+    <form id="stockForm">
+      <input type="hidden" id="stockId">
+      <div class="formgrid">
+        <label>Symbol<input id="fSymbol" required placeholder="NSE:JYOTICNC"></label>
+        <label>Company<input id="fCompany" placeholder="Jyoti CNC"></label>
+        <label>Sector<input id="fSector"></label>
+        <label>Setup<input id="fSetup" placeholder="Trendline Breakout"></label>
+        <label>Level to Watch<input id="fLevel" placeholder="975"></label>
+        <label>Entry<input id="fEntry"></label>
+        <label>Stop Loss<input id="fStop"></label>
+        <label>Target<input id="fTarget"></label>
+        <label>Chartink URL<input id="fChartink" placeholder="https://chartink.com/..."></label>
+        <label>TradingView URL<input id="fTradingview" placeholder="https://tradingview.com/..."></label>
+      </div>
+      <label class="full">Why I'm Watching<textarea id="fWhy" rows="3"></textarea></label>
+      <label class="full">Notes<textarea id="fNotes" rows="4"></textarea></label>
+      <label class="check"><input type="checkbox" id="fFavourite"> Favourite</label>
+      <div class="formactions"><button type="button" class="btn" id="cancelModal">Cancel</button><button class="btn primary">Save Stock</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="journalModal" class="modal hidden">
+  <div class="modalbox">
+    <div class="modalhead"><h2>Trading Journal</h2><button class="close" id="closeJournal">×</button></div>
+    <form id="journalForm">
+      <label>Date<input type="date" id="jDate" required></label>
+      <label>Market View<input id="jMarket" placeholder="Bullish / Bearish / Neutral"></label>
+      <label>Stocks I'm Watching<input id="jStocks" placeholder="JYOTICNC, HAL, BEL"></label>
+      <label>Trades / Actions<textarea id="jTrades" rows="3"></textarea></label>
+      <label>What I Learned<textarea id="jLesson" rows="3"></textarea></label>
+      <label>Notes<textarea id="jNotes" rows="4"></textarea></label>
+      <div class="formactions"><button type="button" class="btn" id="cancelJournal">Cancel</button><button class="btn primary">Save Entry</button></div>
+    </form>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
