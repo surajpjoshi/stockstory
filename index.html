@@ -1,13 +1,135 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>StockStory — Trading Command Center</title><link rel="stylesheet" href="styles.css"><style>
-.header-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.header-actions button,.head>button,.card-actions button,.card-actions a,.journal button,.modal-actions button{border:1px solid #2b3a55;background:#111b2d;color:#dce7f7;border-radius:7px;padding:8px 11px;text-decoration:none;cursor:pointer;font:inherit}.header-actions button:hover,.head>button:hover,.card-actions button:hover,.card-actions a:hover{background:#1a2942}.toolbar{display:flex;gap:10px;margin:12px 0 18px}.toolbar input,.toolbar select{background:#0d1728;border:1px solid #293752;color:#dce7f7;border-radius:7px;padding:10px}.toolbar input{flex:1}.all-head{margin-top:36px}.card-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}.modal.hidden{display:none}.modal-box{width:min(760px,100%);max-height:90vh;overflow:auto;background:#111b2d;border:1px solid #2b3a55;border-radius:12px;padding:22px;box-shadow:0 20px 70px rgba(0,0,0,.5)}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modal-head h2{margin:0}.modal-head button{border:0;background:none;color:#fff;font-size:28px;cursor:pointer}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.modal-box label{display:block;color:#aebbd0;font-size:13px;margin-bottom:12px}.modal-box input,.modal-box textarea{display:block;width:100%;margin-top:6px;padding:10px;border:1px solid #2b3a55;border-radius:7px;background:#0b1424;color:#fff;box-sizing:border-box}.modal-box .checkbox{display:flex;align-items:center;gap:8px}.modal-box .checkbox input{width:auto;margin:0}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.modal-actions .primary{background:#2563eb;border-color:#2563eb}@media(max-width:700px){.form-grid{grid-template-columns:1fr}.header-actions{justify-content:flex-end}.toolbar{flex-direction:column}}
-</style></head><body>
-<header><div><b>Stock<span>Story</span></b><small> NSE Trading Command Center</small></div><div class="header-actions"><button onclick="openStockForm()">+ Add Stock</button><button onclick="document.getElementById('csvInput').click()">Import CSV</button><button onclick="exportCSV()">Export CSV</button><button onclick="render()">↻ Refresh</button><input type="file" id="csvInput" accept=".csv" hidden onchange="importCSV(event)"></div></header>
-<main><section class="hero"><div><small>NSE TRADING JOURNAL</small><h1>Find the setup.<br>Trade the story.</h1><p>Maintain your watchlist, stock ideas, levels and daily trading journal.</p></div><div class="stats"><div><strong id="count">0</strong><small>Watchlist</small></div><div><strong id="favCount">0</strong><small>Favourites</small></div></div></section>
-<nav><button class="active" data-page="watch">Watchlist</button><button data-page="scanner">Stock Story</button><button data-page="journal">Journal</button><button data-page="rules">Rules</button></nav>
-<section id="watch" class="page active"><div class="head"><div><h2>Favourite Stocks</h2><p>Stocks you have selected for deeper tracking.</p></div><button onclick="showAllStocks()">View All</button></div><div id="fav" class="grid"></div><div class="head all-head"><div><h2>Watchlist</h2><p>Stocks you are currently tracking.</p></div></div><div class="toolbar"><input id="searchBox" placeholder="Search symbol, company, setup..." oninput="render()"><select id="favFilter" onchange="render()"><option value="all">All stocks</option><option value="fav">Favourites</option></select></div><div id="allStocks" class="grid"></div></section>
-<section id="scanner" class="page"><div class="head"><div><h2>Stock Story</h2><p>Your detailed trading thesis and levels.</p></div></div><div id="storyList" class="grid"></div></section>
-<section id="journal" class="page"><div class="head"><div><h2>Trading Journal</h2><p>Record what you saw, did and learned.</p></div><button onclick="openJournalForm()">+ Journal Entry</button></div><div id="journalList"></div></section>
-<section id="rules" class="page"><h2>My Trading Rules</h2><div class="rules"><label><input type="checkbox"> Weekly RSI preferably above 50</label><label><input type="checkbox"> RS strength for 5+ days</label><label><input type="checkbox"> Volume confirmation</label><label><input type="checkbox"> Define entry, stop and target</label><label><input type="checkbox"> Prefer minimum 1:2 risk/reward</label><label><input type="checkbox"> Check sector and market strength</label><label><input type="checkbox"> Record the reason for every trade</label></div></section></main>
-<div id="stockModal" class="modal hidden"><div class="modal-box"><div class="modal-head"><h2 id="stockModalTitle">Add Stock</h2><button onclick="closeModals()">×</button></div><form id="stockForm" onsubmit="saveStock(event)"><input type="hidden" id="stockId"><div class="form-grid"><label>Symbol<input id="fSymbol" required placeholder="NSE:JYOTICNC"></label><label>Company<input id="fCompany" placeholder="Jyoti CNC Automation"></label><label>Sector<input id="fSector"></label><label>Setup<input id="fSetup" placeholder="Trendline Breakout"></label><label>Level to Watch<input id="fLevel"></label><label>Entry<input id="fEntry"></label><label>Stop Loss<input id="fStop"></label><label>Target<input id="fTarget"></label><label>Chartink URL<input id="fChartink"></label><label>TradingView URL<input id="fTradingView"></label></div><label>Why I'm Watching<textarea id="fWhy" rows="3"></textarea></label><label>Notes<textarea id="fNotes" rows="4"></textarea></label><label class="checkbox"><input type="checkbox" id="fFavourite"> Favourite stock</label><div class="modal-actions"><button type="button" onclick="closeModals()">Cancel</button><button class="primary" type="submit">Save Stock</button></div></form></div></div>
-<div id="journalModal" class="modal hidden"><div class="modal-box"><div class="modal-head"><h2>Trading Journal</h2><button onclick="closeModals()">×</button></div><form onsubmit="saveJournal(event)"><label>Date<input type="date" id="jDate" required></label><label>Market View<input id="jMarket" placeholder="Bullish / Bearish / Neutral"></label><label>Stocks I'm Watching<input id="jStocks" placeholder="JYOTICNC, HAL, BEL"></label><label>Trades / Actions<textarea id="jTrades" rows="3"></textarea></label><label>What I Learned<textarea id="jLesson" rows="3"></textarea></label><label>Notes<textarea id="jNotes" rows="4"></textarea></label><div class="modal-actions"><button type="button" onclick="closeModals()">Cancel</button><button class="primary" type="submit">Save Entry</button></div></form></div></div>
-<script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>StockStory — Trading Command Center</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><strong>Stock<span>Story</span></strong><small>NSE Trading Command Center</small></div>
+  <div class="top-actions">
+    <button onclick="openStockModal()">+ Add Stock</button>
+    <button onclick="document.getElementById('csvFile').click()">Import CSV</button>
+    <button onclick="exportCSV()">Export CSV</button>
+    <button onclick="render()">↻ Refresh</button>
+    <input id="csvFile" type="file" accept=".csv" hidden onchange="importCSV(event)">
+  </div>
+</header>
+
+<main class="container">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">NSE TRADING JOURNAL</div>
+      <h1>Find the setup.<br>Trade the story.</h1>
+      <p>Maintain your watchlist, stock ideas, levels and daily trading journal.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><strong id="stockCount">0</strong><small>Watchlist</small></div>
+      <div class="stat"><strong id="favCount">0</strong><small>Favourites</small></div>
+    </div>
+  </section>
+
+  <nav class="tabs">
+    <button class="active" data-page="watch">Watchlist</button>
+    <button data-page="story">Stock Story</button>
+    <button data-page="journal">Journal</button>
+    <button data-page="rules">Rules</button>
+  </nav>
+
+  <section id="watch" class="page active">
+    <div class="section-head">
+      <div><h2>Favourite Stocks</h2><p>Stocks you have selected for deeper tracking.</p></div>
+      <button class="secondary" onclick="openStockModal()">+ Add Stock</button>
+    </div>
+    <div id="favourites" class="grid"></div>
+
+    <div class="section-head watch-head">
+      <div><h2>Watchlist</h2><p>Stocks you are currently tracking.</p></div>
+    </div>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search symbol, company, setup..." oninput="render()">
+      <select id="filter" onchange="render()">
+        <option value="all">All stocks</option>
+        <option value="fav">Favourites only</option>
+      </select>
+    </div>
+    <div id="watchlist" class="grid"></div>
+  </section>
+
+  <section id="story" class="page">
+    <div class="section-head">
+      <div><h2>Stock Story</h2><p>Your thesis, setup and levels to watch.</p></div>
+    </div>
+    <div id="stories" class="grid"></div>
+  </section>
+
+  <section id="journal" class="page">
+    <div class="section-head">
+      <div><h2>Trading Journal</h2><p>Record what you saw, did and learned.</p></div>
+      <button class="secondary" onclick="openJournalModal()">+ Journal Entry</button>
+    </div>
+    <div id="journalList"></div>
+  </section>
+
+  <section id="rules" class="page">
+    <div class="section-head"><div><h2>My Trading Rules</h2><p>Keep these visible before taking a trade.</p></div></div>
+    <div class="rules">
+      <label><input type="checkbox"> Weekly RSI preferably above 50</label>
+      <label><input type="checkbox"> RS strength for 5+ days</label>
+      <label><input type="checkbox"> Volume confirmation</label>
+      <label><input type="checkbox"> Define entry, stop and target</label>
+      <label><input type="checkbox"> Prefer minimum 1:2 risk/reward</label>
+      <label><input type="checkbox"> Check sector and market strength</label>
+      <label><input type="checkbox"> Record the reason for every trade</label>
+    </div>
+  </section>
+</main>
+
+<div id="stockModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-title"><h2 id="stockTitle">Add Stock</h2><button onclick="closeModals()">×</button></div>
+    <form onsubmit="saveStock(event)">
+      <input id="stockId" type="hidden">
+      <div class="form-grid">
+        <label>Symbol<input id="symbol" required placeholder="NSE:JYOTICNC"></label>
+        <label>Company<input id="company" placeholder="Jyoti CNC Automation"></label>
+        <label>Sector<input id="sector" placeholder="Capital Goods"></label>
+        <label>Setup<input id="setup" placeholder="Trendline Breakout"></label>
+        <label>Level to Watch<input id="level" placeholder="975"></label>
+        <label>Entry<input id="entry" placeholder="980"></label>
+        <label>Stop Loss<input id="stop" placeholder="900"></label>
+        <label>Target<input id="target" placeholder="1100"></label>
+        <label>Chartink URL<input id="chartink" placeholder="https://chartink.com/..."></label>
+        <label>TradingView URL<input id="tradingview" placeholder="https://www.tradingview.com/..."></label>
+      </div>
+      <label>Why I'm Watching<textarea id="why" rows="3" placeholder="Why is this stock interesting?"></textarea></label>
+      <label>Notes<textarea id="notes" rows="4" placeholder="Breakout confirmation, volume, sector strength, risks..."></textarea></label>
+      <label class="check"><input id="favourite" type="checkbox"> Favourite stock</label>
+      <div class="modal-actions"><button type="button" onclick="closeModals()">Cancel</button><button class="primary" type="submit">Save Stock</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="journalModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-title"><h2>Trading Journal</h2><button onclick="closeModals()">×</button></div>
+    <form onsubmit="saveJournal(event)">
+      <div class="form-grid">
+        <label>Date<input id="jDate" type="date" required></label>
+        <label>Market View<input id="jMarket" placeholder="Bullish / Bearish / Neutral"></label>
+      </div>
+      <label>Stocks I'm Watching<input id="jStocks" placeholder="JYOTICNC, HAL, BEL"></label>
+      <label>Trades / Actions<textarea id="jTrades" rows="3"></textarea></label>
+      <label>What I Learned<textarea id="jLesson" rows="3"></textarea></label>
+      <label>Notes<textarea id="jNotes" rows="4"></textarea></label>
+      <div class="modal-actions"><button type="button" onclick="closeModals()">Cancel</button><button class="primary" type="submit">Save Entry</button></div>
+    </form>
+  </div>
+</div>
+
+<footer>StockStory · Simple Trading Journal & Watchlist</footer>
+<script src="app.js"></script>
+</body>
+</html>

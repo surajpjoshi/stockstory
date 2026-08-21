@@ -1,13 +1,29 @@
-# StockStory V1 — Simple Trading Journal
+# StockStory V1 — Simple Trading Journal & Watchlist
 
-GitHub Pages-friendly static website.
+This version intentionally has no Upstox, Render, Python scanner, GitHub Actions, or API.
 
-Features:
-- Manual watchlist
-- CSV import/export
-- Favourite stocks
-- Stock story fields: thesis, setup, levels, links and notes
-- Trading journal
-- Browser local storage
+## Files
 
-No Upstox/API/backend is required for V1.
+- `index.html` — page
+- `styles.css` — dark StockStory theme
+- `app.js` — watchlist, favourites, journal, CSV import/export
+- `data/watchlist.json` — optional sample/reference data
+- `data/journal.json` — optional sample/reference data
+
+## Data storage
+
+The browser uses localStorage so you can add and edit stocks immediately.
+
+Use Export CSV regularly as a backup.
+
+## CSV columns
+
+`Symbol,Company,Sector,Setup,Level,Entry,StopLoss,Target,Chartink,TradingView,Why,Notes,Favourite`
+
+Example:
+
+`NSE:JYOTICNC,Jyoti CNC,Capital Goods,Trendline Breakout,975,980,900,1100,,,Trendline breakout,Watch volume,true`
+
+## GitHub Pages
+
+Upload/replace `index.html`, `styles.css`, and `app.js` in the repository and publish the `master` branch with GitHub Pages.
