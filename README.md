@@ -27,3 +27,7 @@ Example:
 ## GitHub Pages
 
 Upload/replace `index.html`, `styles.css`, and `app.js` in the repository and publish the `master` branch with GitHub Pages.
+
+
+## Chartink
+If Chartink URL is blank, StockStory automatically opens `https://chartink.com/stocks/<SYMBOL>.html` after removing the `NSE:` prefix. You can still enter a custom Chartink URL in Edit Stock.

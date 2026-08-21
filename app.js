@@ -26,19 +26,65 @@ function render(){
   renderJournal();
 }
 function empty(t){return `<div class="empty">${esc(t)}</div>`}
-function card(s){return `<article class="card">
-<div class="top"><div><div class="symbol">${esc(s.symbol)}</div><div class="company">${esc(s.company)}</div></div><div><span class="badge">${s.favourite?"FAVOURITE":"WATCH"}</span><div class="price">${money(s.level)}</div></div></div>
-<div class="metrics">
-<div class="metric"><small>SETUP</small><strong>${esc(s.setup||"—")}</strong></div>
-<div class="metric"><small>LEVEL</small><strong>${money(s.level)}</strong></div>
-<div class="metric"><small>ENTRY</small><strong>${money(s.entry)}</strong></div>
-<div class="metric"><small>STOP LOSS</small><strong>${money(s.stop)}</strong></div>
-<div class="metric"><small>TARGET</small><strong>${money(s.target)}</strong></div>
-<div class="metric"><small>SECTOR</small><strong>${esc(s.sector||"—")}</strong></div>
-</div>${s.setup?`<span class="tag">${esc(s.setup)}</span>`:""}<p class="thesis">${esc(s.why||"Add why this stock is interesting.")}</p>
-<div class="card-actions"><button onclick="editStock('${s.id}')">Edit</button><button onclick="fav('${s.id}')">${s.favourite?"★ Favourite":"☆ Favourite"}</button>${link(s.chartink,"Chartink")}${link(s.tradingview,"TradingView")}<button onclick="removeStock('${s.id}')">Delete</button></div>
-</article>`}
-function story(s){return `<article class="card"><div class="top"><div><div class="symbol">${esc(s.symbol)} ${s.favourite?"⭐":""}</div><div class="company">${esc(s.company)}</div></div></div><div class="metrics"><div class="metric"><small>SETUP</small><strong>${esc(s.setup||"—")}</strong></div><div class="metric"><small>WATCH LEVEL</small><strong>${money(s.level)}</strong></div><div class="metric"><small>ENTRY</small><strong>${money(s.entry)}</strong></div><div class="metric"><small>STOP</small><strong>${money(s.stop)}</strong></div><div class="metric"><small>TARGET</small><strong>${money(s.target)}</strong></div><div class="metric"><small>SECTOR</small><strong>${esc(s.sector||"—")}</strong></div></div><p class="thesis"><b>Why I'm watching</b><br>${esc(s.why||"—")}</p><p class="thesis"><b>Notes</b><br>${esc(s.notes||"—")}</p><div class="card-actions"><button onclick="editStock('${s.id}')">Edit Story</button>${link(s.chartink,"Chartink")}${link(s.tradingview,"TradingView")}</div></article>`}
+function chartUrl(s){
+  if(s.chartink && s.chartink.trim()) return s.chartink.trim();
+  const symbol=(s.symbol||"").replace(/^NSE:/i,"").replace(/^BSE:/i,"").trim();
+  return symbol ? `https://chartink.com/stocks/${encodeURIComponent(symbol)}.html` : "";
+}
+function card(s){
+  const chart=chartUrl(s);
+  return `<article class="watch-card">
+    <div class="watch-main">
+      <div class="watch-title">
+        <div>
+          <div class="symbol">${esc(s.symbol)}</div>
+          <div class="company">${esc(s.company)}</div>
+        </div>
+        <span class="badge">${s.favourite?"★ FAV":"WATCH"}</span>
+      </div>
+      <div class="watch-meta">
+        ${s.setup?`<span class="tag">${esc(s.setup)}</span>`:""}
+        ${s.level?`<span class="mini-meta">Level ₹${esc(s.level)}</span>`:""}
+        ${s.entry?`<span class="mini-meta">Entry ₹${esc(s.entry)}</span>`:""}
+      </div>
+    </div>
+    <div class="watch-actions">
+      ${chart?`<a class="chart-btn" href="${esc(chart)}" target="_blank" rel="noopener">📈 Chart</a>`:""}
+      ${s.tradingview?`<a href="${esc(s.tradingview)}" target="_blank" rel="noopener">TradingView</a>`:""}
+      <button onclick="editStock('${s.id}')">Edit</button>
+      <button onclick="fav('${s.id}')">${s.favourite?"★":"☆"}</button>
+      <button class="delete-btn" onclick="removeStock('${s.id}')">×</button>
+    </div>
+  </article>`;
+}
+
+function story(s){
+  const chart=chartUrl(s);
+  return `<article class="watch-card story-card">
+    <div class="watch-main">
+      <div class="watch-title">
+        <div>
+          <div class="symbol">${esc(s.symbol)} ${s.favourite?"⭐":""}</div>
+          <div class="company">${esc(s.company)}</div>
+        </div>
+      </div>
+      <div class="watch-meta">
+        ${s.setup?`<span class="tag">${esc(s.setup)}</span>`:""}
+        ${s.level?`<span class="mini-meta">Watch ₹${esc(s.level)}</span>`:""}
+        ${s.entry?`<span class="mini-meta">Entry ₹${esc(s.entry)}</span>`:""}
+        ${s.stop?`<span class="mini-meta">SL ₹${esc(s.stop)}</span>`:""}
+        ${s.target?`<span class="mini-meta">Target ₹${esc(s.target)}</span>`:""}
+      </div>
+      ${s.why?`<div class="story-line"><b>Why:</b> ${esc(s.why)}</div>`:""}
+    </div>
+    <div class="watch-actions">
+      ${chart?`<a class="chart-btn" href="${esc(chart)}" target="_blank" rel="noopener">📈 Chart</a>`:""}
+      ${s.tradingview?`<a href="${esc(s.tradingview)}" target="_blank" rel="noopener">TradingView</a>`:""}
+      <button onclick="editStock('${s.id}')">Edit</button>
+    </div>
+  </article>`;
+}
+
 function link(url,text){return url?`<a href="${esc(url)}" target="_blank" rel="noopener">${text}</a>`:""}
 
 function openStockModal(s=null){
