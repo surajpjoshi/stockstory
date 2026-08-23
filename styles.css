@@ -43,6 +43,9 @@ input,select,button{height:40px;border:1px solid var(--border);border-radius:9px
 input{width:100%}input::placeholder{color:#7c85a0}
 input:focus,select:focus{border-color:rgba(69,230,209,.55);box-shadow:0 0 0 3px var(--blue-soft)}
 select{width:100%}.clear-button{min-width:64px}.clear-button:hover{background:var(--soft)}
+select,select option{color-scheme:dark}
+option{background:#0d0f1a;color:#f4f6fc}
+
 .table-wrap{margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:15px;overflow-x:auto;overflow-y:hidden;box-shadow:var(--shadow);contain:layout paint}
 table{width:100%;min-width:1260px;border-collapse:separate;border-spacing:0;table-layout:auto}
 thead{background:rgba(255,255,255,.035)}
