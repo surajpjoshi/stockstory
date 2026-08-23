@@ -43,7 +43,7 @@ input,select,button{height:40px;border:1px solid var(--border);border-radius:9px
 input{width:100%}input::placeholder{color:#7c85a0}
 input:focus,select:focus{border-color:rgba(69,230,209,.55);box-shadow:0 0 0 3px var(--blue-soft)}
 select{width:100%}.clear-button{min-width:64px}.clear-button:hover{background:var(--soft)}
-.table-wrap{margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:15px;overflow-x:auto;overflow-y:hidden;box-shadow:var(--shadow)}
+.table-wrap{margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:15px;overflow-x:auto;overflow-y:hidden;box-shadow:var(--shadow);contain:layout paint}
 table{width:100%;min-width:1260px;border-collapse:separate;border-spacing:0;table-layout:auto}
 thead{background:rgba(255,255,255,.035)}
 th{position:sticky;top:0;z-index:2;padding:10px 9px;background:rgba(255,255,255,.035);border-bottom:1px solid var(--border);color:#8890a8;font-size:10px;font-weight:800;text-align:left;white-space:nowrap}
@@ -146,10 +146,21 @@ footer{display:flex;justify-content:space-between;gap:15px;padding:24px 4px 5px;
 
 .scanner-panel {
     display: none;
+    /* isolate this panel's layout/paint from the rest of the
+       page — without this, showing/hiding a panel (which changes
+       its height) forces the browser to re-layout everything
+       below it on the page, including the large main stock
+       table. This is very likely what was making tab switches
+       feel like a hang. */
+    contain: layout style paint;
 }
 
 .scanner-panel.active {
     display: block;
+}
+
+.scanner-shell{
+    contain: layout;
 }
 
 .scanner-summary {
@@ -2122,21 +2133,30 @@ footer{display:flex;justify-content:space-between;gap:15px;padding:24px 4px 5px;
 
 .app{position:relative}
 
-/* glass blur on primary containers */
-.hero-header,
-.scanner-shell,
+/* glass blur — ONLY on small, bounded elements.
+   Large/scrollable containers (.scanner-shell, .table-wrap,
+   .favorites-panel) intentionally excluded: backdrop-filter
+   blur on tall/scrollable areas is extremely expensive to
+   repaint and was causing the browser to hang, especially
+   when switching scanner tabs. Use a plain tinted background
+   for those instead (still glassy, just not GPU-heavy). */
 .sector-card,
-.table-wrap,
 .filters,
 .scanner-stat,
 .header-stat,
 .leadership-quick-card,
 .favorite-modal-card,
 .rs-history-dialog,
-.favorites-summary-card,
-.favorites-panel{
+.favorites-summary-card{
     backdrop-filter:blur(22px);
     -webkit-backdrop-filter:blur(22px);
+}
+
+.hero-header,
+.scanner-shell,
+.table-wrap,
+.favorites-panel{
+    background:var(--card-bg);
 }
 
 .sector-card,
@@ -2161,13 +2181,12 @@ footer{display:flex;justify-content:space-between;gap:15px;padding:24px 4px 5px;
     -webkit-text-fill-color:transparent;
 }
 
-/* positive / negative get a tasteful neon glow */
-.positive,td.positive,.rs-positive,td.rs-positive,.ltp-change.positive,.scanner-table .positive{
-    text-shadow:0 0 14px rgba(182,255,77,.35);
-}
-.negative,td.negative,.ltp-change.negative,.scanner-table .negative{
-    text-shadow:0 0 14px rgba(255,92,138,.35);
-}
+/* positive / negative: color only — no text-shadow.
+   (A blur glow here was applied to every single data cell,
+   and since the main stock table has no row limit, that
+   could mean thousands of blurred-text elements repainting
+   on any layout change — a real performance hazard. Plain
+   color against the dark background is already vivid enough.) */
 
 /* pill-style active tabs, gradient + glow, like the reference dashboard */
 .scanner-tab.active,

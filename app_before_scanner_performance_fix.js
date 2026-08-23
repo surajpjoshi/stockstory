@@ -2524,12 +2524,16 @@ async function removeFavoriteFromTable(symbol) {
 }
 
 
-/* NOTE: initFavoritesTab() used to attach a second, redundant
-   click listener to every .scanner-tab that duplicated the
-   "favorites" branch below — meaning clicking the Favorites tab
-   rendered the table twice per click. Removed; the tab-switching
-   listener directly below already handles it once. */
+function initFavoritesTab() {
 
+    document.querySelectorAll(".scanner-tab").forEach(button => {
+        button.addEventListener("click", () => {
+            if (button.dataset.scanner === "favorites") {
+                renderFavoritesTable();
+            }
+        });
+    });
+}
 
 
 function openChartInk(symbol) {
@@ -3933,5 +3937,7 @@ loadData = async function() {
     renderFavoritesTable();
 
 };
+
+initFavoritesTab();
 
 loadData();
