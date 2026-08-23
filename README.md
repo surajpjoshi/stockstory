@@ -1,33 +1,33 @@
-# StockStory V1 — Simple Trading Journal & Watchlist
+# Nifty Sector Relative Strength
 
-This version intentionally has no Upstox, Render, Python scanner, GitHub Actions, or API.
+Initial GitHub Actions + Python + Upstox setup.
 
-## Files
+## Current scope
 
-- `index.html` — page
-- `styles.css` — dark StockStory theme
-- `app.js` — watchlist, favourites, journal, CSV import/export
-- `data/watchlist.json` — optional sample/reference data
-- `data/journal.json` — optional sample/reference data
+- Fetch historical daily data from Upstox
+- Test Nifty 50 data connection
+- Keep Upstox token in GitHub Actions Secrets
+- Prepare stock master CSV
 
-## Data storage
+## GitHub Secret
 
-The browser uses localStorage so you can add and edit stocks immediately.
+Create this repository secret:
 
-Use Export CSV regularly as a backup.
+`UPSTOX_ACCESS_TOKEN`
 
-## CSV columns
+Do not put the actual token in the repository.
 
-`Symbol,Company,Sector,Setup,Level,Entry,StopLoss,Target,Chartink,TradingView,Why,Notes,Favourite`
+## Run
 
-Example:
+GitHub → Actions → Test Upstox Data → Run workflow
 
-`NSE:JYOTICNC,Jyoti CNC,Capital Goods,Trendline Breakout,975,980,900,1100,,,Trendline breakout,Watch volume,true`
+The next stage will calculate:
 
-## GitHub Pages
-
-Upload/replace `index.html`, `styles.css`, and `app.js` in the repository and publish the `master` branch with GitHub Pages.
-
-
-## Chartink
-If Chartink URL is blank, StockStory automatically opens `https://chartink.com/stocks/<SYMBOL>.html` after removing the `NSE:` prefix. You can still enter a custom Chartink URL in Edit Stock.
+- Daily return
+- Weekly return
+- 1M return
+- 3M return
+- 6M return
+- YTD return
+- Nifty 3M return
+- Stock RS vs Nifty
