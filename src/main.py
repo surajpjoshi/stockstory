@@ -488,86 +488,121 @@ def fetch_ltp_quotes(instrument_mapping):
     return quotes, fetched_at
 
 
-def calculate_return(df, periods):
 
-    if len(df) <= periods:
-        return None
+def calculate_returns(df, current_price=None):
+    """
+    Calculate returns using the current/live price when supplied.
 
-    latest_close = df.iloc[-1]["close"]
+    During market hours Upstox daily candles generally represent the last
+    completed daily candle, not the current intraday price. Therefore:
+      - current_price = LIVE LTP -> today's return calculations use LTP
+      - current_price = None -> fall back to the latest completed daily close
 
-    previous_close = df.iloc[
-        -1 - periods
-    ]["close"]
-
-    if previous_close == 0:
-        return None
-
-    return (
-        (latest_close / previous_close)
-        - 1
-    ) * 100
-
-
-def calculate_ytd(df):
+    Historical anchors remain the completed daily closes:
+      daily  = current / previous session close
+      weekly = current / close 5 sessions ago
+      1M     = current / close 21 sessions ago
+      3M     = current / close 63 sessions ago
+      6M     = current / close 126 sessions ago
+      YTD    = current / last prior-year close
+    """
 
     if df.empty:
-        return None
+        return {
+            "daily": None,
+            "weekly": None,
+            "1m": None,
+            "3m": None,
+            "6m": None,
+            "ytd": None,
+        }
 
-    latest_date = df.iloc[-1]["date"]
+    data = df.sort_values("date").reset_index(drop=True)
 
-    current_year = latest_date.year
+    latest_close = float(data.iloc[-1]["close"])
 
-    previous_year_data = df[
-        df["date"].apply(
-            lambda x:
-            x.year < current_year
-        )
+    if current_price is None:
+        current = latest_close
+    else:
+        try:
+            current = float(current_price)
+            if pd.isna(current) or current <= 0:
+                current = latest_close
+        except (TypeError, ValueError):
+            current = latest_close
+
+    def return_from_anchor(periods):
+        # When current_price is LIVE LTP, the latest completed daily
+        # close is the zero-period anchor. Therefore:
+        #   daily -> yesterday close
+        #   weekly -> 5 completed sessions before yesterday
+        #   1M -> 21 completed sessions before yesterday
+        #   3M -> 63 completed sessions before yesterday
+        #   6M -> 126 completed sessions before yesterday
+        #
+        # When there is no live price, preserve the original daily-candle
+        # calculation where the latest completed close is the current value.
+        if current_price is not None:
+            anchor_index = periods
+        else:
+            anchor_index = periods + 1
+
+        if len(data) <= anchor_index:
+            return None
+
+        anchor = float(data.iloc[-1 - anchor_index]["close"])
+        if anchor == 0:
+            return None
+
+        return ((current / anchor) - 1) * 100
+
+    current_date = data.iloc[-1]["date"]
+    current_year = current_date.year
+
+    previous_year_data = data[
+        data["date"].apply(lambda x: x.year < current_year)
     ]
 
     if previous_year_data.empty:
-        return None
-
-    previous_year_close = (
-        previous_year_data.iloc[-1]["close"]
-    )
-
-    latest_close = df.iloc[-1]["close"]
-
-    if previous_year_close == 0:
-        return None
-
-    return (
-        (latest_close / previous_year_close)
-        - 1
-    ) * 100
-
-
-def calculate_returns(df):
+        ytd = None
+    else:
+        anchor = float(previous_year_data.iloc[-1]["close"])
+        ytd = ((current / anchor) - 1) * 100 if anchor != 0 else None
 
     return {
-        "daily": calculate_return(df, 1),
-        "weekly": calculate_return(df, 5),
-        "1m": calculate_return(df, 21),
-        "3m": calculate_return(df, 63),
-        "6m": calculate_return(df, 126),
-        "ytd": calculate_ytd(df),
+        "daily": return_from_anchor(1),
+        "weekly": return_from_anchor(5),
+        "1m": return_from_anchor(21),
+        "3m": return_from_anchor(63),
+        "6m": return_from_anchor(126),
+        "ytd": ytd,
     }
+
 
 
 def calculate_rs_history(
     stock_df,
     nifty_df,
     days=10,
+    current_stock_price=None,
+    current_nifty_price=None,
+    current_volume=None,
+    current_date=None,
 ):
     """
-    Calculate daily 3M Relative Strength for the
-    last `days` actual market trading sessions.
+    Calculate daily 3M Relative Strength for the last `days` observations.
 
-    RS = Stock 3M return - Nifty 3M return
+    Historical observations use completed daily candles.
 
-    Only actual dates returned by the NSE/Upstox daily
-    candle data are used. Weekends and market holidays
-    therefore never appear in the history.
+    The final/current observation uses:
+        current_stock_price = live stock LTP
+        current_nifty_price = live NIFTY LTP
+        current_volume      = live stock volume
+
+    This is important because the daily candle API can still contain the
+    previous completed session while the market is currently trading.
+
+    RS = Stock 3M return - NIFTY 3M return
     """
 
     if stock_df.empty or nifty_df.empty:
@@ -580,101 +615,53 @@ def calculate_rs_history(
     nifty["date"] = pd.to_datetime(nifty["date"])
 
     stock = (
-        stock
-        .sort_values("date")
+        stock.sort_values("date")
         .drop_duplicates("date")
         .reset_index(drop=True)
     )
 
     nifty = (
-        nifty
-        .sort_values("date")
+        nifty.sort_values("date")
         .drop_duplicates("date")
         .reset_index(drop=True)
     )
 
-    # ---------------------------------------------------------
-    # Align stock and NIFTY on actual common trading sessions.
-    # ---------------------------------------------------------
-
     merged = pd.merge(
-        stock[
-            [
-                "date",
-                "close",
-                "volume",
-            ]
-        ],
-        nifty[
-            [
-                "date",
-                "close",
-            ]
-        ],
+        stock[["date", "close", "volume"]],
+        nifty[["date", "close"]],
         on="date",
         how="inner",
-        suffixes=(
-            "_stock",
-            "_nifty",
-        ),
+        suffixes=("_stock", "_nifty"),
     )
 
     if merged.empty:
         return []
 
     merged = (
-        merged
-        .sort_values("date")
+        merged.sort_values("date")
         .reset_index(drop=True)
     )
-
-    # ---------------------------------------------------------
-    # 3 MONTH = approximately 63 trading sessions.
-    #
-    # We need the historical candle before the 3M window
-    # in order to calculate the return for EACH date.
-    # ---------------------------------------------------------
 
     LOOKBACK_SESSIONS = 63
 
     if len(merged) <= LOOKBACK_SESSIONS:
         return []
 
-    merged["stock_base"] = (
-        merged["close_stock"]
-        .shift(LOOKBACK_SESSIONS)
-    )
+    # Historical 3M bases.
+    merged["stock_base"] = merged["close_stock"].shift(LOOKBACK_SESSIONS)
+    merged["nifty_base"] = merged["close_nifty"].shift(LOOKBACK_SESSIONS)
 
-    merged["nifty_base"] = (
-        merged["close_nifty"]
-        .shift(LOOKBACK_SESSIONS)
-    )
-
-    # Stock 3M return
     merged["stock_3m_return"] = (
-        (
-            merged["close_stock"]
-            / merged["stock_base"]
-        ) - 1
+        (merged["close_stock"] / merged["stock_base"]) - 1
     ) * 100
 
-    # NIFTY 3M return
     merged["nifty_3m_return"] = (
-        (
-            merged["close_nifty"]
-            / merged["nifty_base"]
-        ) - 1
+        (merged["close_nifty"] / merged["nifty_base"]) - 1
     ) * 100
 
-    # Relative Strength
     merged["rs"] = (
-        merged["stock_3m_return"]
-        - merged["nifty_3m_return"]
+        merged["stock_3m_return"] - merged["nifty_3m_return"]
     )
-
-    # ---------------------------------------------------------
-    # Keep only rows where the complete 3M calculation exists.
-    # ---------------------------------------------------------
 
     valid = merged[
         merged["stock_base"].notna()
@@ -685,44 +672,112 @@ def calculate_rs_history(
     if valid.empty:
         return []
 
-    # ---------------------------------------------------------
-    # IMPORTANT:
-    #
-    # tail(days) means LAST ACTUAL TRADING SESSIONS.
-    #
-    # No calendar-day calculation is used here.
-    # ---------------------------------------------------------
-
-    recent = valid.tail(days).copy()
+    # Historical observations first.
+    recent = valid.tail(max(days, 10)).copy()
 
     history = []
 
     for _, item in recent.iterrows():
-
         volume = item["volume"]
 
         history.append(
             {
-                "date": item["date"].strftime(
-                    "%Y-%m-%d"
-                ),
-
-                "rs": clean_number(
-                    item["rs"]
-                ),
-
+                "date": item["date"].strftime("%Y-%m-%d"),
+                "rs": clean_number(item["rs"]),
                 "volume": (
                     int(volume)
-                    if (
-                        pd.notna(volume)
-                        and float(volume) >= 0
-                    )
+                    if pd.notna(volume) and float(volume) >= 0
                     else None
                 ),
             }
         )
 
-    return history
+    # ---------------------------------------------------------
+    # ADD / REPLACE TODAY'S LIVE OBSERVATION
+    # ---------------------------------------------------------
+    # This makes RS Momentum and Volume Gainers use today's LTP
+    # and today's live volume instead of yesterday's close.
+    if (
+        current_stock_price is not None
+        and current_nifty_price is not None
+    ):
+        try:
+            live_stock = float(current_stock_price)
+            live_nifty = float(current_nifty_price)
+
+            if live_stock > 0 and live_nifty > 0:
+                if current_date is None:
+                    live_date = datetime.now(IST).date()
+                else:
+                    live_date = (
+                        pd.to_datetime(current_date).date()
+                        if not isinstance(current_date, date)
+                        else current_date
+                    )
+
+                # Use the correct 63-session completed-close anchor.
+                #
+                # If today's live session is NOT in the daily candle data,
+                # yesterday is the last completed row, so today's 63-session
+                # anchor is 63 rows back from yesterday.
+                #
+                # If today's row IS already present, use its existing 63-session
+                # shifted base.
+                if pd.to_datetime(current_date).date() > merged.iloc[-1]["date"].date():
+                    if len(merged) <= LOOKBACK_SESSIONS:
+                        return history[-days:]
+
+                    live_base_row = merged.iloc[-LOOKBACK_SESSIONS]
+                    live_stock_base = float(live_base_row["close_stock"])
+                    live_nifty_base = float(live_base_row["close_nifty"])
+                else:
+                    base_row = valid.iloc[-1]
+                    live_stock_base = float(base_row["stock_base"])
+                    live_nifty_base = float(base_row["nifty_base"])
+
+                if (
+                    live_stock_base > 0
+                    and live_nifty_base > 0
+                ):
+                    live_stock_3m = (
+                        (live_stock / live_stock_base) - 1
+                    ) * 100
+
+                    live_nifty_3m = (
+                        (live_nifty / live_nifty_base) - 1
+                    ) * 100
+
+                    live_rs = (
+                        live_stock_3m - live_nifty_3m
+                    )
+
+                    live_volume = None
+                    if current_volume is not None:
+                        try:
+                            live_volume = int(float(current_volume))
+                        except (TypeError, ValueError):
+                            live_volume = None
+
+                    live_item = {
+                        "date": live_date.strftime("%Y-%m-%d"),
+                        "rs": clean_number(live_rs),
+                        "volume": live_volume,
+                        "source": "LIVE LTP",
+                    }
+
+                    # Replace an existing same-date observation, otherwise append.
+                    history = [
+                        item
+                        for item in history
+                        if item.get("date") != live_item["date"]
+                    ]
+                    history.append(live_item)
+
+        except (TypeError, ValueError, IndexError):
+            pass
+
+    return history[-days:]
+
 
 def calculate_rs_momentum_metrics(
     rs_history,
@@ -921,6 +976,52 @@ def clean_number(value):
     )
 
 
+
+def fetch_single_ltp(instrument_key):
+    """
+    Fetch a single live LTP from Upstox.
+
+    Used for NIFTY 50 because the normal equity LTP mapping is keyed
+    by ISIN, while NIFTY is an index instrument.
+    """
+    try:
+        response = requests.get(
+            LTP_URL,
+            headers=get_headers(),
+            params={"instrument_key": instrument_key},
+            timeout=REQUEST_TIMEOUT,
+        )
+
+        response.raise_for_status()
+
+        data = response.json().get("data", {})
+
+        if not data:
+            return None
+
+        # Upstox may return the exact instrument key or a normalized key.
+        quote = None
+
+        for key, item in data.items():
+            if str(key).strip() == instrument_key:
+                quote = item
+                break
+
+        if quote is None:
+            quote = next(iter(data.values()))
+
+        ltp = quote.get("last_price")
+
+        if ltp is None:
+            return None
+
+        return clean_number(ltp)
+
+    except Exception as error:
+        print("NIFTY live LTP ERROR:", error)
+        return None
+
+
 def fetch_nifty_return(
     from_date,
     to_date,
@@ -958,7 +1059,14 @@ def fetch_nifty_return(
         },
     )
 
-    return nifty_returns, nifty_df
+    live_nifty_ltp = fetch_single_ltp(NIFTY_INSTRUMENT)
+
+    print(
+        "Live NIFTY 50 LTP:",
+        live_nifty_ltp,
+    )
+
+    return nifty_returns, nifty_df, live_nifty_ltp
 
 
 def load_stocks():
@@ -1083,6 +1191,7 @@ def process_stock(
     nifty_df,
     instrument_mapping,
     ltp_quotes,
+    live_nifty_ltp=None,
 ):
 
     symbol = str(
@@ -1141,10 +1250,40 @@ def process_stock(
     # 10-DAY RS HISTORY + VOLUME HISTORY
     # ---------------------------------------------------------
 
+    # ---------------------------------------------------------
+    # LIVE PRICE OVERRIDE
+    # ---------------------------------------------------------
+    # During market hours, LTP is the current price. The daily candle
+    # may still represent the previous completed session, so all
+    # current-period calculations must use LTP when available.
+    ltp_data = ltp_quotes.get(isin, {})
+
+    live_stock_ltp = ltp_data.get("LTP")
+    live_stock_volume = ltp_data.get("LTP Volume")
+
+    return_price = live_stock_ltp
+
+    if return_price is None:
+        return_price = (
+            float(df.iloc[-1]["close"])
+            if not df.empty
+            else None
+        )
+
+    price_source = (
+        "LIVE LTP"
+        if live_stock_ltp is not None
+        else "LAST COMPLETED CLOSE"
+    )
+
     rs_history = calculate_rs_history(
         df,
         nifty_df,
         days=10,
+        current_stock_price=live_stock_ltp,
+        current_nifty_price=live_nifty_ltp,
+        current_volume=live_stock_volume,
+        current_date=datetime.now(IST).date(),
     )
 
     rs_metrics = calculate_rs_momentum_metrics(
@@ -1155,11 +1294,24 @@ def process_stock(
         rs_history
     )
 
-    returns = calculate_returns(df)
+    returns = calculate_returns(
+        df,
+        current_price=return_price,
+    )
 
     stock_3m = returns.get("3m")
 
-    nifty_3m = nifty_returns.get("3m")
+    # Use live NIFTY LTP as the current price for NIFTY's 3M return.
+    nifty_live_price = live_nifty_ltp
+    if nifty_live_price is None and not nifty_df.empty:
+        nifty_live_price = float(nifty_df.iloc[-1]["close"])
+
+    nifty_live_returns = calculate_returns(
+        nifty_df,
+        current_price=nifty_live_price,
+    )
+
+    nifty_3m = nifty_live_returns.get("3m")
 
     if (
         stock_3m is not None
@@ -1288,8 +1440,10 @@ def process_stock(
         ),
 
         "LTP": (
-            ltp_quotes.get(isin, {}).get("LTP")
+            ltp_data.get("LTP")
         ),
+
+        "Return Calculation Price": price_source,
 
         "Previous Close": (
             ltp_quotes.get(isin, {}).get(
@@ -1503,7 +1657,7 @@ def main():
             f"LTP quotes={len(ltp_quotes)}"
         )
 
-    nifty_returns, nifty_df = (
+    nifty_returns, nifty_df, live_nifty_ltp = (
         fetch_nifty_return(
             from_date_str,
             to_date_str,
@@ -1554,6 +1708,7 @@ def main():
                 nifty_df,
                 instrument_mapping,
                 ltp_quotes,
+                live_nifty_ltp,
             )
 
             if result.get(
@@ -1600,6 +1755,7 @@ def main():
     # live quote request completed in India Standard Time.
     dashboard_metadata = {
         "Last Fetch": ltp_fetch_time,
+        "Live NIFTY LTP": live_nifty_ltp,
     }
 
     for _, row in stocks.iterrows():
@@ -1624,6 +1780,9 @@ def main():
 
             "Last Fetch":
                 dashboard_metadata["Last Fetch"],
+
+            "Live NIFTY LTP":
+                dashboard_metadata["Live NIFTY LTP"],
         }
 
         stock_result = (
@@ -1735,6 +1894,11 @@ def main():
                         "LTP"
                     ),
 
+                "Return Calculation Price":
+                    stock_result.get(
+                        "Return Calculation Price"
+                    ),
+
                 "Previous Close":
                     stock_result.get(
                         "Previous Close"
@@ -1812,6 +1976,9 @@ def main():
 
                 "LTP":
                     None,
+
+                "Return Calculation Price":
+                    "ERROR",
 
                 "Previous Close":
                     None,
