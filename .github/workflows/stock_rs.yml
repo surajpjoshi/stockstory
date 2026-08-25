@@ -3,6 +3,11 @@ name: Nifty Master Relative Strength
 on:
   workflow_dispatch:
 
+  schedule:
+    - cron: "30 6 * * *"   # 12:00 PM IST
+    - cron: "30 11 * * *"  # 5:00 PM IST
+    - cron: "30 16 * * *"  # 10:00 PM IST
+
 permissions:
   contents: write
 
