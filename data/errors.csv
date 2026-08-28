@@ -1,13 +1,14 @@
 Sector,Company Name,Industry,Symbol,Series,ISIN Code,Status
 nifty500healthcare,J.B. Chemicals & Pharmaceuticals Ltd.,Healthcare,JBCHEPHARM,EQ,INE572A01036,MAPPING_NOT_FOUND
-niftyenergy,Gujarat State Petronet Ltd.,Oil Gas & Consumable Fuels,GSPL,EQ,INE246F01010,MAPPING_NOT_FOUND
-niftyfinancialservicesexbank,Angel One Ltd.,Financial Services,ANGELONE,EQ,INE732I01013,MAPPING_NOT_FOUND
-niftyhousing,Tata Steel Ltd.,METALS,TATASTEEL,EQ,INE081A01012,MAPPING_NOT_FOUND
-niftyhousing,Kotak Mahindra Bank Ltd.,FINANCIAL SERVICES,KOTAKBANK,EQ,INE237A01028,MAPPING_NOT_FOUND
+niftycapitalgoods,TD Power Systems Ltd.,Capital Goods,TDPOWERSYS,EQ,INE419M01027,MAPPING_NOT_FOUND
+niftyhospitals,Jupiter Life Line Hospitals Ltd.,Healthcare,JLHL,EQ,INE682M01012,MAPPING_NOT_FOUND
 niftyhousing,Housing Development Finance Corporation Ltd.,FINANCIAL SERVICES,HDFC,EQ,INE001A01036,MAPPING_NOT_FOUND
-niftymidsmallfinancailservice,Angel One Ltd.,Financial Services,ANGELONE,EQ,INE732I01013,MAPPING_NOT_FOUND
-niftymidsmallhealthcare,J.B. Chemicals & Pharmaceuticals Ltd.,Healthcare,JBCHEPHARM,EQ,INE572A01036,MAPPING_NOT_FOUND
-niftyoilgas,Gujarat State Petronet Ltd.,Oil Gas & Consumable Fuels,GSPL,EQ,INE246F01010,MAPPING_NOT_FOUND
-niftypharma,J.B. Chemicals & Pharmaceuticals Ltd.,Healthcare,JBCHEPHARM,EQ,INE572A01036,MAPPING_NOT_FOUND
-nifty500,Gujarat State Petronet Ltd.,Oil Gas & Consumable Fuels,GSPL,EQ,INE246F01010,MAPPING_NOT_FOUND
-nifty500,J.B. Chemicals & Pharmaceuticals Ltd.,Healthcare,JBCHEPHARM,EQ,INE572A01036,MAPPING_NOT_FOUND
+niftyhousing,Kotak Mahindra Bank Ltd.,FINANCIAL SERVICES,KOTAKBANK,EQ,INE237A01028,MAPPING_NOT_FOUND
+niftyhousing,Tata Steel Ltd.,METALS,TATASTEEL,EQ,INE081A01012,MAPPING_NOT_FOUND
+niftymicrocap250,Dummy Inox Green Ltd.,Construction,DUMMYINXGN,EQ,DUM510W01014,MAPPING_NOT_FOUND
+niftymicrocap250,Dummy Triveni Ltd.,Capital Goods,DUMMYTRVN,EQ,DUM256C01024,MAPPING_NOT_FOUND
+niftyreitsandrealty,Brookfield India Real Estate Trust,Realty,BIRET,RR,INE0FDU25010,MAPPING_NOT_FOUND
+niftyreitsandrealty,EMBASSY OFFICE PARKS REIT,Realty,EMBASSY,RR,INE041025011,MAPPING_NOT_FOUND
+niftyreitsandrealty,Knowledge Realty Trust,Realty,KRT,RR,INE1JAR25012,MAPPING_NOT_FOUND
+niftyreitsandrealty,MINDSPACE BUSINESS PARKS REIT,Realty,MINDSPACE,RR,INE0CCU25019,MAPPING_NOT_FOUND
+niftyreitsandrealty,Nexus Select Trust,Realty,NXST,RR,INE0NDH25011,MAPPING_NOT_FOUND
